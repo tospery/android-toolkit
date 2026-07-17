@@ -56,3 +56,7 @@ secring.gpg
 
 # Gradle Wrapper JAR 是可复现构建的必要文件，必须提交。
 !gradle/wrapper/gradle-wrapper.jar
+
+# Python 校验脚本的本地字节码缓存。
+__pycache__/
+*.py[cod]
