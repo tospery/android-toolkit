@@ -115,7 +115,7 @@ data class MavenModuleMetadata(
 val toolkitGroupId = "com.tospery"
 val toolkitVersion = "0.0.1"
 val toolkitRepositoryUrl =
-    "https://github.com/tospery/tospery-android-toolkit"
+    "https://github.com/tospery/android-toolkit"
 
 /**
  * Maven 发布模块白名单。
@@ -226,11 +226,11 @@ subprojects {
                 url.set(toolkitRepositoryUrl)
                 connection.set(
                     "scm:git:git://github.com/tospery/" +
-                        "tospery-android-toolkit.git",
+                        "android-toolkit.git",
                 )
                 developerConnection.set(
                     "scm:git:ssh://git@github.com/tospery/" +
-                        "tospery-android-toolkit.git",
+                        "android-toolkit.git",
                 )
             }
         }

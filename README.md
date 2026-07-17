@@ -35,8 +35,8 @@ application-specific business logic.
 Clone the repository and run the complete verification suite:
 
 ```bash
-git clone https://github.com/tospery/tospery-android-toolkit.git
-cd tospery-android-toolkit
+git clone https://github.com/tospery/android-toolkit.git
+cd android-toolkit
 ./gradlew clean check
 ```
 
@@ -89,7 +89,7 @@ Add the following to the consuming project's `settings.gradle.kts` and
 adjust the local path as needed:
 
 ```kotlin
-includeBuild("../tospery-android-toolkit") {
+includeBuild("../android-toolkit") {
     dependencySubstitution {
         substitute(module("com.tospery:base"))
             .using(project(":base"))

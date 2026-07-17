@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "tospery-android-toolkit"
+rootProject.name = "android-toolkit"
 
 include(":base")
 include(":core")
