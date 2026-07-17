@@ -40,7 +40,7 @@ jobs:
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
             --sdk_root="$ANDROID_HOME" \
-            --install "platforms;android-37"
+            --install "platforms;android-37.0"
 
       - name: Run checks
         run: ./gradlew --no-daemon clean check
