@@ -12,6 +12,7 @@ okhttp = "5.4.0"
 moshi = "1.15.2"
 timber = "5.0.1"
 jsoup = "1.22.2"
+vanniktechMavenPublish = "0.37.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,3 +48,4 @@ jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }
