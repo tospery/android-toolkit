@@ -78,7 +78,7 @@ subprojects {
     plugins.withId("java") {
         extensions.configure<JavaPluginExtension> {
             sourceSets.named("main") {
-                java.srcDir(generatedModuleMetadataDirectory)
+                java.srcDir(generateModuleMetadata.flatMap { it.outputDirectory })
             }
         }
     }
