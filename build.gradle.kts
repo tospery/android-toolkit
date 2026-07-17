@@ -186,6 +186,12 @@ subprojects {
     apply(plugin = "com.vanniktech.maven.publish")
 
     extensions.configure<MavenPublishBaseExtension> {
+        // 发布到 Maven Central，首次发布完成验证后在 Portal 中人工确认。
+        publishToMavenCentral()
+
+        // 正式发布时通过 signAllPublications=true 启用 GPG 签名，
+        // 避免 Maven Local 和常规 CI 在没有私钥时执行签名任务。
+
         coordinates(
             groupId = toolkitGroupId,
             artifactId = publicationMetadata.artifactId,
