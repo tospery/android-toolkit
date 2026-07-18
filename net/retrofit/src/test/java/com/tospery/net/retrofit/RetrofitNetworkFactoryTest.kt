@@ -131,10 +131,11 @@ class RetrofitNetworkFactoryTest {
             ).execute().close()
 
             val messages = logger.entries.map { it.message }
+            assertEquals(3, messages.size)
             assertEquals("[GET]${server.url("/repos")}", messages[0])
-            assertEquals("<空>", messages[1])
-            assertEquals("[200]${server.url("/repos")}", messages[2])
-            assertEquals("ok", messages[3])
+            assertEquals("[200]${server.url("/repos")}", messages[1])
+            assertEquals("ok", messages[2])
+            assertTrue(messages.contains("<空>").not())
             assertTrue(messages.joinToString("\n").contains("secret").not())
             assertTrue(logger.entries.all { it.tag == NET_LOG_TAG })
         }

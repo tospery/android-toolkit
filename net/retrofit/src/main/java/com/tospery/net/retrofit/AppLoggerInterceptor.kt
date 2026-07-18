@@ -30,7 +30,9 @@ internal class AppLoggerInterceptor(
         val url = request.url.toLogUrl()
 
         info(tag = tag) { "[${request.method}]$url" }
-        info(tag = tag) { request.body.redactedForLog(request.headers) }
+        request.body.requestBodyForLog(request.headers)?.let { requestBody ->
+            info(tag = tag) { requestBody }
+        }
 
         return try {
             val response = chain.proceed(request)
@@ -61,8 +63,8 @@ internal class AppLoggerInterceptor(
         }
     }
 
-    private fun RequestBody?.redactedForLog(headers: Headers): String {
-        if (this == null) return EMPTY_LOG_VALUE
+    private fun RequestBody?.requestBodyForLog(headers: Headers): String? {
+        if (this == null) return null
         if (isDuplex() || isOneShot()) return UNREADABLE_LOG_VALUE
         if (!headers.isPlainTextBody()) return UNREADABLE_LOG_VALUE
 
@@ -72,8 +74,10 @@ internal class AppLoggerInterceptor(
                 buffer.readString(contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8)
             }
         }.getOrDefault(UNREADABLE_LOG_VALUE)
-            .truncateForLog()
-            .redactSensitiveText()
+            .takeUnless(String::isBlank)
+            // 没有请求参数时不额外产生一条“空参数”日志，只保留方法与地址。
+            ?.truncateForLog()
+            ?.redactSensitiveText()
     }
 
     private fun Response.responseBodyForLog(): String {
