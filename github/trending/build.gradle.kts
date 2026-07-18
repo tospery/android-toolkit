@@ -12,7 +12,7 @@ kotlin {
     }
 }
 dependencies {
-    api(project(":github-model-core"))
+    api(project(":github:model:core"))
     implementation(libs.jsoup)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

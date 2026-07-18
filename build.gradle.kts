@@ -113,7 +113,7 @@ data class MavenModuleMetadata(
 )
 
 val toolkitGroupId = "com.tospery"
-val toolkitVersion = "0.0.1"
+val toolkitVersion = "0.0.2"
 val toolkitRepositoryUrl =
     "https://github.com/tospery/android-toolkit"
 
@@ -159,13 +159,13 @@ val toolkitPublicationModules = mapOf(
         description =
             "Reusable Android app utilities and Compose components.",
     ),
-    ":github-model-core" to MavenModuleMetadata(
+    ":github:model:core" to MavenModuleMetadata(
         artifactId = "github-model-core",
         displayName = "Tospery GitHub Model Core",
         description =
             "Reusable core models for GitHub integrations.",
     ),
-    ":github-trending" to MavenModuleMetadata(
+    ":github:trending" to MavenModuleMetadata(
         artifactId = "github-trending",
         displayName = "Tospery GitHub Trending",
         description =
