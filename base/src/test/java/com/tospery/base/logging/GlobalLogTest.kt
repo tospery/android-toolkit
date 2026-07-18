@@ -65,7 +65,7 @@ class GlobalLogTest {
 
     @Test
     fun moduleTagConvertsGradlePathToLogTag() {
-        assertEquals("mylog-github-model-core", LogTags.moduleTag(":github-model-core"))
+        assertEquals("mylog-github-model-core", LogTags.moduleTag(":github:model:core"))
         assertEquals("mylog-app-feature-mine", LogTags.moduleTag(":app:feature:mine"))
     }
 
