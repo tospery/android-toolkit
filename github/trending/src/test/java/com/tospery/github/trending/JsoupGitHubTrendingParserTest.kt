@@ -180,6 +180,46 @@ class JsoupGitHubTrendingParserTest {
     }
 
     @Test
+    fun parseDevelopersMapsLocationAndCompanyMetadata() {
+        val html = """
+            <html>
+              <body>
+                <article class="Box-row">
+                  <h1><a href="/rjpower">Russell Power</a></h1>
+                  <p>
+                    <svg class="octicon octicon-location"></svg>
+                    <span class="Truncate">
+                      <span class="Truncate-text">Seattle</span>
+                    </span>
+                  </p>
+                </article>
+                <article class="Box-row">
+                  <h1><a href="/alexey-milovidov">Alexey Milovidov</a></h1>
+                  <p>
+                    <span class="sr-only">Works for ClickHouse</span>
+                    <svg class="octicon octicon-organization"></svg>
+                    <span class="Truncate">
+                      <span class="Truncate-text">ClickHouse</span>
+                    </span>
+                  </p>
+                </article>
+              </body>
+            </html>
+        """.trimIndent()
+
+        val result = parser.parseDevelopers(html)
+
+        assertEquals(
+            "Seattle",
+            result.developers.single { it.login == "rjpower" }.location,
+        )
+        assertEquals(
+            "ClickHouse",
+            result.developers.single { it.login == "alexey-milovidov" }.company,
+        )
+    }
+
+    @Test
     fun parseRepositoriesAcceptsWeeklyAndMonthlyStarLabels() {
         val html = """
             <html>

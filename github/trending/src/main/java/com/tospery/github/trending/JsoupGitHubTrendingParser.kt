@@ -104,6 +104,8 @@ class JsoupGitHubTrendingParser : GitHubTrendingParser {
             selectFirst("img.avatar-user, img")
                 ?.absUrl("src")
                 ?.takeIf { it.isNotBlank() }
+        val company = parseDeveloperMetadata(ORGANIZATION_ICON_CLASS)
+        val location = parseDeveloperMetadata(LOCATION_ICON_CLASS)
 
         return User(
             id = UserId("trending:$username"),
@@ -113,13 +115,21 @@ class JsoupGitHubTrendingParser : GitHubTrendingParser {
             avatarUrl = avatarUrl,
             htmlUrl = "$GITHUB_BASE_URL/$username",
             bio = null,
-            company = null,
-            location = null,
+            company = company,
+            location = location,
             blog = null,
             followersCount = null,
             followingCount = null,
         )
     }
+
+    private fun Element.parseDeveloperMetadata(iconClass: String): String? =
+        selectFirst("svg.$iconClass")
+            ?.parent()
+            ?.selectFirst(".Truncate-text")
+            ?.text()
+            ?.trim()
+            ?.takeIf(String::isNotEmpty)
 
     private fun Element.parsePopularRepository(): Repo? {
         val repoLink =
@@ -252,6 +262,8 @@ class JsoupGitHubTrendingParser : GitHubTrendingParser {
     private companion object {
         const val GITHUB_BASE_URL = "https://github.com"
         const val BUILT_BY_LABEL = "Built by"
+        const val LOCATION_ICON_CLASS = "octicon-location"
+        const val ORGANIZATION_ICON_CLASS = "octicon-organization"
         val STARS_IN_PERIOD_REGEX =
             Regex(
                 pattern = "([\\d,]+(?:\\.\\d+)?[kKmM]?)\\s+stars?\\s+(?:today|this\\s+week|this\\s+month)",
