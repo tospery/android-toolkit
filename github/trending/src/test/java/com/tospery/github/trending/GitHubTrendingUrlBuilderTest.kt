@@ -47,6 +47,21 @@ class GitHubTrendingUrlBuilderTest {
     }
 
     @Test
+    fun developersUrlAddsSponsorableOnlyWhenRequested() {
+        val sponsorableUrl = builder.developersUrl(sponsorable = true)
+        val allDevelopersUrl = builder.developersUrl(sponsorable = false)
+
+        assertEquals(
+            "https://github.com/trending/developers?since=daily&sponsorable=1",
+            sponsorableUrl,
+        )
+        assertEquals(
+            "https://github.com/trending/developers?since=daily",
+            allDevelopersUrl,
+        )
+    }
+
+    @Test
     fun urlBuilderEncodesSpecialCharacters() {
         val url = builder.repositoriesUrl(
             programmingLanguage = ProgrammingLanguage(id = "C++", name = "C++"),

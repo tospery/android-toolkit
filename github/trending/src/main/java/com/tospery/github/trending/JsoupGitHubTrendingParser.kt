@@ -13,18 +13,42 @@ import org.jsoup.nodes.Element
  * GitHub Trending 是网页而不是稳定 API，所以选择较宽松的选择器，降低页面微调导致解析失败的概率。
  */
 class JsoupGitHubTrendingParser : GitHubTrendingParser {
-    override fun parseRepositories(html: String): List<Repo> {
+    override fun parseRepositories(html: String): GitHubTrendingRepositories {
         val document = Jsoup.parse(html, GITHUB_BASE_URL)
-        return document.select("article.Box-row").mapNotNull { article ->
-            article.parseRepository()
+        val repositories = mutableListOf<Repo>()
+        val starsInPeriodByRepoId = linkedMapOf<RepoId, Int>()
+
+        document.select("article.Box-row").forEach { article ->
+            val repository = article.parseRepository() ?: return@forEach
+            repositories += repository
+            article.parseStarsInPeriod()?.let { starsInPeriod ->
+                starsInPeriodByRepoId[repository.id] = starsInPeriod
+            }
         }
+
+        return GitHubTrendingRepositories(
+            repositories = repositories,
+            starsInPeriodByRepoId = starsInPeriodByRepoId,
+        )
     }
 
-    override fun parseDevelopers(html: String): List<User> {
+    override fun parseDevelopers(html: String): GitHubTrendingDevelopers {
         val document = Jsoup.parse(html, GITHUB_BASE_URL)
-        return document.select("article.Box-row").mapNotNull { article ->
-            article.parseDeveloper()
+        val developers = mutableListOf<User>()
+        val popularRepositoryByDeveloperId = linkedMapOf<UserId, Repo>()
+
+        document.select("article.Box-row").forEach { article ->
+            val developer = article.parseDeveloper() ?: return@forEach
+            developers += developer
+            article.parsePopularRepository()?.let { repository ->
+                popularRepositoryByDeveloperId[developer.id] = repository
+            }
         }
+
+        return GitHubTrendingDevelopers(
+            developers = developers,
+            popularRepositoryByDeveloperId = popularRepositoryByDeveloperId,
+        )
     }
 
     private fun Element.parseRepository(): Repo? {
@@ -64,10 +88,16 @@ class JsoupGitHubTrendingParser : GitHubTrendingParser {
     }
 
     private fun Element.parseDeveloper(): User? {
-        val userLink = selectFirst("h1 a, h2 a") ?: return null
-        val username = userLink.attr("href").trim('/').takeIf { it.isNotBlank() } ?: return null
+        val userLink =
+            select("h1 a, h2 a")
+                .firstOrNull { link -> link.userLoginOrNull() != null }
+                ?: return null
+        val username = userLink.userLoginOrNull() ?: return null
         val displayName = userLink.text().trim().takeIf { it.isNotBlank() }
-        val avatarUrl = selectFirst("img")?.absUrl("src")?.takeIf { it.isNotBlank() }
+        val avatarUrl =
+            selectFirst("img.avatar-user, img")
+                ?.absUrl("src")
+                ?.takeIf { it.isNotBlank() }
 
         return User(
             id = UserId("trending:$username"),
@@ -85,30 +115,103 @@ class JsoupGitHubTrendingParser : GitHubTrendingParser {
         )
     }
 
+    private fun Element.parsePopularRepository(): Repo? {
+        val repoLink =
+            select("article h1 a[href], article h2 a[href]")
+                .firstOrNull { link -> link.repositoryPathOrNull() != null }
+                ?: return null
+        val repositoryPath = repoLink.repositoryPathOrNull() ?: return null
+        val repositoryArticle =
+            repoLink.parents().firstOrNull { parent -> parent.tagName() == "article" }
+        val description =
+            repositoryArticle
+                ?.selectFirst("div.f6.color-fg-muted.mt-1, p")
+                ?.text()
+                ?.takeIf { it.isNotBlank() }
+
+        return Repo(
+            id = RepoId("trending:${repositoryPath.owner}/${repositoryPath.name}"),
+            githubId = null,
+            ownerLogin = repositoryPath.owner,
+            name = repositoryPath.name,
+            fullName = "${repositoryPath.owner}/${repositoryPath.name}",
+            description = description,
+            htmlUrl = "$GITHUB_BASE_URL/${repositoryPath.owner}/${repositoryPath.name}",
+            language = null,
+            stargazersCount = null,
+            forksCount = null,
+            watchersCount = null,
+            openIssuesCount = null,
+            licenseName = null,
+            isPrivate = null,
+            isFork = null,
+            updatedAt = null,
+        )
+    }
+
+    private fun Element.parseStarsInPeriod(): Int? {
+        return select("span")
+            .asSequence()
+            .map(Element::text)
+            .mapNotNull { text ->
+                STARS_IN_PERIOD_REGEX
+                    .find(text)
+                    ?.groupValues
+                    ?.get(1)
+                    ?.toCompactIntOrNull()
+            }
+            .firstOrNull()
+    }
+
+    private fun Element.userLoginOrNull(): String? {
+        val path = attr("href").substringBefore('?').trim('/')
+        return path.takeIf { it.isNotBlank() && '/' !in it }
+    }
+
+    private fun Element.repositoryPathOrNull(): RepositoryPath? {
+        val parts =
+            attr("href")
+                .substringBefore('?')
+                .trim('/')
+                .split('/')
+        if (parts.size != 2) return null
+
+        val owner = parts[0].trim()
+        val name = parts[1].trim()
+        if (owner.isBlank() || name.isBlank()) return null
+
+        return RepositoryPath(owner = owner, name = name)
+    }
+
     private fun String.toCompactIntOrNull(): Int? {
         val normalized = trim()
             .replace(",", "")
             .lowercase()
 
-        val numberText = normalized
-            .substringBefore("stars today")
-            .substringBefore("star today")
-            .trim()
-
         return when {
-            numberText.endsWith("k") -> {
-                val value = numberText.removeSuffix("k").toDoubleOrNull() ?: return null
+            normalized.endsWith("k") -> {
+                val value = normalized.removeSuffix("k").toDoubleOrNull() ?: return null
                 (value * 1_000).toInt()
             }
-            numberText.endsWith("m") -> {
-                val value = numberText.removeSuffix("m").toDoubleOrNull() ?: return null
+            normalized.endsWith("m") -> {
+                val value = normalized.removeSuffix("m").toDoubleOrNull() ?: return null
                 (value * 1_000_000).toInt()
             }
-            else -> numberText.toIntOrNull()
+            else -> normalized.toIntOrNull()
         }
     }
 
+    private data class RepositoryPath(
+        val owner: String,
+        val name: String,
+    )
+
     private companion object {
         const val GITHUB_BASE_URL = "https://github.com"
+        val STARS_IN_PERIOD_REGEX =
+            Regex(
+                pattern = "([\\d,]+(?:\\.\\d+)?[kKmM]?)\\s+stars?\\s+(?:today|this\\s+week|this\\s+month)",
+                option = RegexOption.IGNORE_CASE,
+            )
     }
 }

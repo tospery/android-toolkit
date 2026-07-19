@@ -2,9 +2,7 @@ package com.tospery.github.trending
 
 import com.tospery.github.model.core.DateRange
 import com.tospery.github.model.core.ProgrammingLanguage
-import com.tospery.github.model.core.Repo
 import com.tospery.github.model.core.SpokenLanguage
-import com.tospery.github.model.core.User
 
 /**
  * GitHub Trending API 默认实现。
@@ -20,7 +18,7 @@ class DefaultGitHubTrendingApi(
         programmingLanguage: ProgrammingLanguage?,
         spokenLanguage: SpokenLanguage?,
         dateRange: DateRange,
-    ): GitHubTrendingResult<List<Repo>> =
+    ): GitHubTrendingResult<GitHubTrendingRepositories> =
         runGitHubTrendingCatching {
             val url = urlBuilder.repositoriesUrl(
                 programmingLanguage = programmingLanguage,
@@ -33,11 +31,13 @@ class DefaultGitHubTrendingApi(
     override suspend fun getDevelopers(
         programmingLanguage: ProgrammingLanguage?,
         dateRange: DateRange,
-    ): GitHubTrendingResult<List<User>> =
+        sponsorable: Boolean,
+    ): GitHubTrendingResult<GitHubTrendingDevelopers> =
         runGitHubTrendingCatching {
             val url = urlBuilder.developersUrl(
                 programmingLanguage = programmingLanguage,
                 dateRange = dateRange,
+                sponsorable = sponsorable,
             )
             parser.parseDevelopers(htmlLoader.load(url))
         }

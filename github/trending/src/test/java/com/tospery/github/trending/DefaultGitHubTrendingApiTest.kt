@@ -58,7 +58,10 @@ class DefaultGitHubTrendingApiTest {
             loadedUrls,
         )
         assertTrue(result is GitHubTrendingResult.Success)
-        assertEquals(parser.repositories, (result as GitHubTrendingResult.Success).data)
+        assertEquals(
+            GitHubTrendingRepositories(repositories = parser.repositories),
+            (result as GitHubTrendingResult.Success).data,
+        )
     }
 
     @Test
@@ -93,14 +96,18 @@ class DefaultGitHubTrendingApiTest {
         val result = api.getDevelopers(
             programmingLanguage = ProgrammingLanguage("kotlin", "Kotlin", "#F18E33"),
             dateRange = DateRange.MONTHLY,
+            sponsorable = true,
         )
 
         assertEquals(
-            listOf("https://github.com/trending/developers/kotlin?since=monthly"),
+            listOf("https://github.com/trending/developers/kotlin?since=monthly&sponsorable=1"),
             loadedUrls,
         )
         assertTrue(result is GitHubTrendingResult.Success)
-        assertEquals(parser.developers, (result as GitHubTrendingResult.Success).data)
+        assertEquals(
+            GitHubTrendingDevelopers(developers = parser.developers),
+            (result as GitHubTrendingResult.Success).data,
+        )
     }
 
     @Test
@@ -123,8 +130,12 @@ class DefaultGitHubTrendingApiTest {
         val repositories: List<Repo> = emptyList(),
         val developers: List<User> = emptyList(),
     ) : GitHubTrendingParser {
-        override fun parseRepositories(html: String): List<Repo> = repositories
+        override fun parseRepositories(html: String): GitHubTrendingRepositories {
+            return GitHubTrendingRepositories(repositories = repositories)
+        }
 
-        override fun parseDevelopers(html: String): List<User> = developers
+        override fun parseDevelopers(html: String): GitHubTrendingDevelopers {
+            return GitHubTrendingDevelopers(developers = developers)
+        }
     }
 }

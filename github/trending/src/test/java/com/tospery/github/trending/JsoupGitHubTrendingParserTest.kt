@@ -33,12 +33,13 @@ class JsoupGitHubTrendingParserTest {
             </html>
         """.trimIndent()
 
-        val repositories = parser.parseRepositories(html)
+        val result = parser.parseRepositories(html)
+        val repoId = RepoId("trending:owner/repo")
 
         assertEquals(
             listOf(
                 Repo(
-                    id = RepoId("trending:owner/repo"),
+                    id = repoId,
                     githubId = null,
                     ownerLogin = "owner",
                     name = "repo",
@@ -56,8 +57,9 @@ class JsoupGitHubTrendingParserTest {
                     updatedAt = null,
                 ),
             ),
-            repositories,
+            result.repositories,
         )
+        assertEquals(mapOf(repoId to 78), result.starsInPeriodByRepoId)
     }
 
     @Test
@@ -72,7 +74,7 @@ class JsoupGitHubTrendingParserTest {
             </html>
         """.trimIndent()
 
-        assertTrue(parser.parseRepositories(html).isEmpty())
+        assertTrue(parser.parseRepositories(html).repositories.isEmpty())
     }
 
     @Test
@@ -86,7 +88,7 @@ class JsoupGitHubTrendingParserTest {
                 <a href="/octocat">Octocat</a>
               </h1>
               <article>
-                <a href="/octocat/hello-world">hello-world</a>
+                <h1><a href="/octocat/hello-world">hello-world</a></h1>
                 <p>Demo repository</p>
               </article>
             </article>
@@ -94,12 +96,13 @@ class JsoupGitHubTrendingParserTest {
         </html>
     """.trimIndent()
 
-        val developers = parser.parseDevelopers(html)
+        val result = parser.parseDevelopers(html)
+        val developerId = UserId("trending:octocat")
 
         assertEquals(
             listOf(
                 User(
-                    id = UserId("trending:octocat"),
+                    id = developerId,
                     githubId = null,
                     login = "octocat",
                     name = "Octocat",
@@ -113,7 +116,74 @@ class JsoupGitHubTrendingParserTest {
                     followingCount = null,
                 ),
             ),
-            developers,
+            result.developers,
+        )
+        assertEquals(
+            Repo(
+                id = RepoId("trending:octocat/hello-world"),
+                githubId = null,
+                ownerLogin = "octocat",
+                name = "hello-world",
+                fullName = "octocat/hello-world",
+                description = "Demo repository",
+                htmlUrl = "https://github.com/octocat/hello-world",
+                language = null,
+                stargazersCount = null,
+                forksCount = null,
+                watchersCount = null,
+                openIssuesCount = null,
+                licenseName = null,
+                isPrivate = null,
+                isFork = null,
+                updatedAt = null,
+            ),
+            result.popularRepositoryByDeveloperId[developerId],
+        )
+    }
+
+    @Test
+    fun parseDevelopersKeepsDeveloperWithoutPopularRepository() {
+        val html = """
+            <html>
+              <body>
+                <article class="Box-row">
+                  <h1><a href="/octocat">Octocat</a></h1>
+                </article>
+              </body>
+            </html>
+        """.trimIndent()
+
+        val result = parser.parseDevelopers(html)
+
+        assertEquals(listOf("octocat"), result.developers.map(User::login))
+        assertTrue(result.popularRepositoryByDeveloperId.isEmpty())
+    }
+
+    @Test
+    fun parseRepositoriesAcceptsWeeklyAndMonthlyStarLabels() {
+        val html = """
+            <html>
+              <body>
+                <article class="Box-row">
+                  <h2><a href="/owner/weekly">owner / weekly</a></h2>
+                  <span>1.2k stars this week</span>
+                </article>
+                <article class="Box-row">
+                  <h2><a href="/owner/monthly">owner / monthly</a></h2>
+                  <span>2M stars this month</span>
+                </article>
+              </body>
+            </html>
+        """.trimIndent()
+
+        val result = parser.parseRepositories(html)
+
+        assertEquals(
+            mapOf(
+                RepoId("trending:owner/weekly") to 1_200,
+                RepoId("trending:owner/monthly") to 2_000_000,
+            ),
+            result.starsInPeriodByRepoId,
         )
     }
 }

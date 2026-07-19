@@ -28,9 +28,15 @@ class GitHubTrendingUrlBuilder(
     fun developersUrl(
         programmingLanguage: ProgrammingLanguage? = null,
         dateRange: DateRange = DateRange.DAILY,
+        sponsorable: Boolean = false,
     ): String = buildUrl(
         path = listOfNotNull("trending", "developers", programmingLanguage?.id),
-        query = mapOf("since" to dateRange.value),
+        query = buildMap {
+            put("since", dateRange.value)
+            if (sponsorable) {
+                put("sponsorable", "1")
+            }
+        },
     )
 
     private fun buildUrl(
