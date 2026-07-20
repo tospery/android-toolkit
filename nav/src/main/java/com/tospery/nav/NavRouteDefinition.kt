@@ -159,7 +159,7 @@ private sealed interface NavRoutePatternSegment {
 
 private fun compileNavRoutePattern(path: String): CompiledNavRoutePattern {
     val pathSegments =
-        requireNotNull(parseRoutePathSegments(path)) {
+        requireNotNull(splitRoutePathSegments(path)) {
             "Nav route pattern must contain non-empty path segments."
         }
     val patternSegments =
@@ -179,7 +179,12 @@ private fun compileNavRoutePattern(path: String): CompiledNavRoutePattern {
                     )
                 }
 
-                else -> NavRoutePatternSegment.Literal(segment)
+                else -> {
+                    require(isValidDecodedNavPathSegment(segment)) {
+                        "Nav route pattern contains an unsafe literal segment: $segment"
+                    }
+                    NavRoutePatternSegment.Literal(segment)
+                }
             }
         }
     val parameterNames =
@@ -213,6 +218,15 @@ private fun validateNoAmbiguousPatterns(routes: List<RegisteredNavRoute>) {
 }
 
 private fun parseRoutePathSegments(path: String): List<String>? {
+    val segments = splitRoutePathSegments(path) ?: return null
+    return buildList(segments.size) {
+        segments.forEach { segment ->
+            add(decodeNavPathSegmentOrNull(segment) ?: return null)
+        }
+    }
+}
+
+private fun splitRoutePathSegments(path: String): List<String>? {
     val normalizedPath = path.trim().trim('/')
     if (normalizedPath.isBlank()) {
         return null

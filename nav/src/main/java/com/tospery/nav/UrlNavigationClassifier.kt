@@ -1,5 +1,7 @@
 package com.tospery.nav
 
+import com.tospery.base.logging.LogAttribute
+import com.tospery.base.logging.debug
 import java.net.URI
 
 private val defaultSystemSchemes = setOf(
@@ -26,11 +28,41 @@ class UrlNavigationClassifier(
     private val systemSchemes = config.systemSchemes.mapTo(mutableSetOf()) { it.normalized() }
 
     fun classify(uri: String): UrlNavigationTarget {
+        val target = classifyTarget(uri)
+
+        debug(
+            tag = NAV_LOG_TAG,
+            attributes =
+                listOf(
+                    LogAttribute(
+                        key = "input_url",
+                        value = uri.redactNavigationUrl(),
+                    ),
+                    LogAttribute(
+                        key = "target_type",
+                        value = target.navigationLogType(),
+                    ),
+                    LogAttribute(
+                        key = "target_url",
+                        value = target.toNavigationLogUrl(),
+                    ),
+                ),
+        ) {
+            "URL 导航目标分类完成。"
+        }
+
+        return target
+    }
+
+    private fun classifyTarget(uri: String): UrlNavigationTarget {
         val parsedUri = runCatching { URI(uri.trim()) }.getOrNull()
             ?: return UrlNavigationTarget.Unknown(uri)
 
         val scheme = parsedUri.scheme?.lowercase()
-            ?: return NavRoute(uri).let(UrlNavigationTarget::InternalRoute)
+            ?: return UrlNavigationTarget.InternalRoute(
+                route = NavRoute(uri),
+                origin = InternalRouteOrigin.RelativeRoute,
+            )
 
         val host = parsedUri.host?.lowercase()
         val path = parsedUri.path.orEmpty().trimStart('/')
@@ -42,6 +74,10 @@ class UrlNavigationClassifier(
                     path = host.orEmpty() + path.withLeadingSlash(),
                     rawQuery = query,
                     source = uri,
+                    origin =
+                        InternalRouteOrigin.AppScheme(
+                            scheme = UrlScheme(scheme),
+                        ),
                 )
             }
 
@@ -50,6 +86,11 @@ class UrlNavigationClassifier(
                     path = path,
                     rawQuery = query,
                     source = uri,
+                    origin =
+                        InternalRouteOrigin.TrustedWebHost(
+                            scheme = UrlScheme(scheme),
+                            host = UrlHost(requireNotNull(host)),
+                        ),
                 )
             }
 
@@ -74,6 +115,7 @@ class UrlNavigationClassifier(
         path: String,
         rawQuery: String?,
         source: String,
+        origin: InternalRouteOrigin,
     ): UrlNavigationTarget {
         val route = runCatching {
             NavRoute(buildRoute(path = path, rawQuery = rawQuery))
@@ -82,7 +124,10 @@ class UrlNavigationClassifier(
         return if (route == null) {
             UrlNavigationTarget.Unknown(source)
         } else {
-            UrlNavigationTarget.InternalRoute(route)
+            UrlNavigationTarget.InternalRoute(
+                route = route,
+                origin = origin,
+            )
         }
     }
 

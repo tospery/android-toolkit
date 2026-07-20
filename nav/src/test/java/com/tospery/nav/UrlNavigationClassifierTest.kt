@@ -17,7 +17,13 @@ class UrlNavigationClassifierTest {
         val target = classifier.classify("higit://about")
 
         assertEquals(
-            UrlNavigationTarget.InternalRoute(NavRoute("about")),
+            UrlNavigationTarget.InternalRoute(
+                route = NavRoute("about"),
+                origin =
+                    InternalRouteOrigin.AppScheme(
+                        scheme = UrlScheme("higit"),
+                    ),
+            ),
             target,
         )
     }
@@ -37,7 +43,11 @@ class UrlNavigationClassifierTest {
 
         assertEquals(
             UrlNavigationTarget.InternalRoute(
-                NavRoute("dialog?id=clearcache"),
+                route = NavRoute("dialog?id=clearcache"),
+                origin =
+                    InternalRouteOrigin.AppScheme(
+                        scheme = UrlScheme("higit"),
+                    ),
             ),
             target,
         )
@@ -48,7 +58,27 @@ class UrlNavigationClassifierTest {
         val target = classifier.classify("https://higit.com/about")
 
         assertEquals(
-            UrlNavigationTarget.InternalRoute(NavRoute("about")),
+            UrlNavigationTarget.InternalRoute(
+                route = NavRoute("about"),
+                origin =
+                    InternalRouteOrigin.TrustedWebHost(
+                        scheme = UrlScheme("https"),
+                        host = UrlHost("higit.com"),
+                    ),
+            ),
+            target,
+        )
+    }
+
+    @Test
+    fun relativeRoutePreservesRelativeOrigin() {
+        val target = classifier.classify("home?tab=3")
+
+        assertEquals(
+            UrlNavigationTarget.InternalRoute(
+                route = NavRoute("home?tab=3"),
+                origin = InternalRouteOrigin.RelativeRoute,
+            ),
             target,
         )
     }

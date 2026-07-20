@@ -1,5 +1,8 @@
 package com.tospery.nav
 
+import com.tospery.base.logging.LogAttribute
+import com.tospery.base.logging.debug
+
 class NavActionResolver(
     private val routeTable: NavRouteTable,
 ) {
@@ -7,7 +10,7 @@ class NavActionResolver(
         target: UrlNavigationTarget,
         isAuthenticated: Boolean,
     ): NavAction {
-        return when (target) {
+        val action = when (target) {
             is UrlNavigationTarget.InternalRoute -> resolveInternalRoute(
                 route = target.route,
                 isAuthenticated = isAuthenticated,
@@ -33,6 +36,33 @@ class NavActionResolver(
                 source = target.uri,
             )
         }
+
+        debug(
+            tag = NAV_LOG_TAG,
+            attributes =
+                listOf(
+                    LogAttribute(
+                        key = "target_type",
+                        value = target.navigationLogType(),
+                    ),
+                    LogAttribute(
+                        key = "target_url",
+                        value = target.toNavigationLogUrl(),
+                    ),
+                    LogAttribute(
+                        key = "action_type",
+                        value = action.navigationLogType(),
+                    ),
+                    LogAttribute(
+                        key = "authenticated",
+                        value = isAuthenticated.toString(),
+                    ),
+                ),
+        ) {
+            "URL 导航动作解析完成。"
+        }
+
+        return action
     }
 
     private fun resolveInternalRoute(

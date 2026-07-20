@@ -126,6 +126,51 @@ class NavRouteTableTest {
     }
 
     @Test
+    fun percentEncodedUtf8SegmentIsDecodedBeforeParameterExtraction() {
+        val table = repositoryRouteTable()
+
+        val match = requireNotNull(table.match("caf%C3%A9/project"))
+
+        assertEquals(
+            mapOf(
+                "owner" to "café",
+                "repo" to "project",
+            ),
+            match.pathParameters,
+        )
+    }
+
+    @Test
+    fun plusInPathSegmentRemainsPlus() {
+        val table = repositoryRouteTable()
+
+        val match = requireNotNull(table.match("owner+suffix/project"))
+
+        assertEquals("owner+suffix", match.pathParameters["owner"])
+    }
+
+    @Test
+    fun unsafeOrMalformedSegmentsDoNotMatchDynamicRoutes() {
+        val table = repositoryRouteTable()
+
+        listOf(
+            "devxoul%2Fadmin/ReactorKit",
+            "devxoul%5Cadmin/ReactorKit",
+            "./ReactorKit",
+            "../ReactorKit",
+            "%2E/ReactorKit",
+            "%2E%2E/ReactorKit",
+            "devxoul//ReactorKit",
+            "devxoul/%00ReactorKit",
+            "devxoul/%2",
+            "devxoul/%GG",
+            "devxoul/%C3%28",
+        ).forEach { path ->
+            assertNull(table.match(path))
+        }
+    }
+
+    @Test
     fun staticRouteWinsOverFullyDynamicRoute() {
         val repository =
             NavRouteDefinition(
@@ -306,6 +351,18 @@ class NavRouteTableTest {
                     ),
                     navOverlayRouteDefinition(
                         presentation = NavPresentation.DIALOG,
+                    ),
+                ),
+        )
+    }
+
+    private fun repositoryRouteTable(): NavRouteTable {
+        return NavRouteTable(
+            definitions =
+                listOf(
+                    NavRouteDefinition(
+                        id = NavRouteId("repository"),
+                        path = "{owner}/{repo}",
                     ),
                 ),
         )
