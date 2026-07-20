@@ -40,4 +40,8 @@ data class Repo(
     val isPrivate: Boolean?,
     val isFork: Boolean?,
     val updatedAt: String?,
+    val sizeInKilobytes: Long? = null,
+    val defaultBranch: String? = null,
+    val subscribersCount: Int? = null,
+    val licenseSpdxId: String? = null,
 )
