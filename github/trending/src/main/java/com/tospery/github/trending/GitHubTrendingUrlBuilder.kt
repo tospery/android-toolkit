@@ -18,10 +18,16 @@ class GitHubTrendingUrlBuilder(
         spokenLanguage: SpokenLanguage? = null,
         dateRange: DateRange = DateRange.DAILY,
     ): String = buildUrl(
-        path = listOfNotNull("trending", programmingLanguage?.id),
+        path =
+            listOfNotNull(
+                "trending",
+                programmingLanguage?.id.toGitHubTrendingFilterIdOrNull(),
+            ),
         query = buildMap {
             put("since", dateRange.value)
-            spokenLanguage?.id?.let { put("spoken_language_code", it) }
+            spokenLanguage?.id
+                .toGitHubTrendingFilterIdOrNull()
+                ?.let { put("spoken_language_code", it) }
         },
     )
 
@@ -30,7 +36,12 @@ class GitHubTrendingUrlBuilder(
         dateRange: DateRange = DateRange.DAILY,
         sponsorable: Boolean = false,
     ): String = buildUrl(
-        path = listOfNotNull("trending", "developers", programmingLanguage?.id),
+        path =
+            listOfNotNull(
+                "trending",
+                "developers",
+                programmingLanguage?.id.toGitHubTrendingFilterIdOrNull(),
+            ),
         query = buildMap {
             put("since", dateRange.value)
             if (sponsorable) {
@@ -63,7 +74,11 @@ class GitHubTrendingUrlBuilder(
     private fun String.encodeUrlPart(): String =
         URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "%20")
 
+    private fun String?.toGitHubTrendingFilterIdOrNull(): String? =
+        this?.takeUnless { it == ANY_LANGUAGE_ID }
+
     private companion object {
+        const val ANY_LANGUAGE_ID = "*"
         const val DEFAULT_BASE_URL = "https://github.com"
     }
 }

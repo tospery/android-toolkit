@@ -34,6 +34,32 @@ class GitHubTrendingUrlBuilderTest {
     }
 
     @Test
+    fun repositoriesUrlOmitsAnySpokenLanguageSentinel() {
+        val url =
+            builder.repositoriesUrl(
+                spokenLanguage = SpokenLanguage(id = "*", name = "Any"),
+            )
+
+        assertEquals(
+            "https://github.com/trending?since=daily",
+            url,
+        )
+    }
+
+    @Test
+    fun repositoriesUrlOmitsAnyProgrammingLanguageSentinel() {
+        val url =
+            builder.repositoriesUrl(
+                programmingLanguage = ProgrammingLanguage(id = "*", name = "Any"),
+            )
+
+        assertEquals(
+            "https://github.com/trending?since=daily",
+            url,
+        )
+    }
+
+    @Test
     fun developersUrlBuildsUrlWithLanguageAndDateRange() {
         val url = builder.developersUrl(
             programmingLanguage = ProgrammingLanguage(id = "Kotlin", name = "Kotlin"),
@@ -42,6 +68,19 @@ class GitHubTrendingUrlBuilderTest {
 
         assertEquals(
             "https://github.com/trending/developers/Kotlin?since=weekly",
+            url,
+        )
+    }
+
+    @Test
+    fun developersUrlOmitsAnyProgrammingLanguageSentinel() {
+        val url =
+            builder.developersUrl(
+                programmingLanguage = ProgrammingLanguage(id = "*", name = "Any"),
+            )
+
+        assertEquals(
+            "https://github.com/trending/developers?since=daily",
             url,
         )
     }
