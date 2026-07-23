@@ -35,7 +35,7 @@ fun SuiteCenterAlignedTopAppBar(
                     containerColor = MaterialTheme.colorScheme.background,
                 ),
         )
-        SuiteHorizontalDivider(
+        OnePixelHorizontalDivider(
             color =
                 MaterialTheme.colorScheme.outlineVariant.copy(
                     alpha = TOP_APP_BAR_DIVIDER_ALPHA,

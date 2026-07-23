@@ -122,7 +122,7 @@ fun SuiteListRow(
             }
         }
         if (showDivider) {
-            SuiteHorizontalDivider(
+            OnePixelHorizontalDivider(
                 modifier =
                     Modifier.padding(
                         start = contentPadding.calculateLeftPadding(layoutDirection),
