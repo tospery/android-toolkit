@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
  * App 级阻塞式 HUD。
  *
  * [showContentContainer] 为 false 时，加载内容直接绘制在 scrim 上，不创建 Surface、圆角或阴影。
+ * [scrimColor] 可设为 [Color.Transparent]，用于只保留加载内容与阻塞交互的场景。
  */
 @Composable
 fun AppHud(
@@ -31,13 +32,14 @@ fun AppHud(
     modifier: Modifier = Modifier,
     message: String? = null,
     showContentContainer: Boolean = true,
+    scrimColor: Color = Color.Black.copy(alpha = 0.24f),
 ) {
     if (!visible) return
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.24f)),
+            .background(scrimColor),
         contentAlignment = Alignment.Center,
     ) {
         if (showContentContainer) {
